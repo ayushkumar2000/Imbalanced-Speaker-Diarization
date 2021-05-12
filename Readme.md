@@ -124,7 +124,7 @@ segments = dict(
 
 ## Training
 
-Based on **LSTM_Baseline_Files_1.ipynb** and **CNN_Baseline_Files.ipynb** notebooks.
+Based on **LSTM_GANMM_model.ipynb** and **CNN_Baseline_Files.ipynb** notebooks.
 
 For training we use tensorflow sequential models.
 ```sh
