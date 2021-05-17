@@ -5,6 +5,7 @@
 - Spectral clustering 
 - Dataset generation
 - GANMM + Spectral clustering based upsampling
+- Training and Testing of GANMM on Voxconverse 2020 dataset
 
 
 # Methods used (using available libraries)

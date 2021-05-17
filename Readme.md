@@ -12,6 +12,7 @@ This project contains:
 - Contains trained VAD system
 - Text-independent Speaker recognition module based on LSTM and triplet loss.
 - GANMM + Spectral Clustering based upsampling
+- LSTM Embedding Models on AMI Corpus and VoxConverse 2020 Dataset
 - Mainly inspired from research paper: [Speaker Diarization with LSTM](https://arxiv.org/abs/1710.10468]),and [Mixture of GANs for Clustering](https://www.ijcai.org/Proceedings/2018/0423.pdf).
 
 
@@ -40,7 +41,6 @@ Install all the dependencies with pip command inside colab notebook.
 ```sh
 !pip3 install (above prerequisite)
 ```
-
 
 
 
@@ -101,7 +101,7 @@ CNN model training for VAD is trained and tested in *VAD_modeling.ipynb* noteboo
 
 
 ### B) Using webrtcvad Library
-Based on *VAD_modeling.ipynb* notebook
+Based on *VAD_library.ipynb* notebook
 
 The audio segments processed individually are based on the following parameters:
 ```sh
@@ -122,9 +122,10 @@ segments = dict(
 )
 ```
 
+
 ## Training
 
-Based on **LSTM_GANMM_model.ipynb** and **CNN_Baseline_Files.ipynb** notebooks.
+Based on **Main_Pipeline.ipynb** and **CNN_Baseline_Files.ipynb** notebooks.
 
 For training we use tensorflow sequential models.
 ```sh
@@ -186,7 +187,7 @@ clusterer = SpectralClusterer(
 labels = clusterer.predict(X_embedding)
 ```
 
-Note: GANMM work is inspired from this [notebook](https://github.com/eyounx/GANMM).
+Note: GANMM base files have been taken from this [repository](https://github.com/eyounx/GANMM).
 ### Other clustering methods
 To run K means use 
 ```sh
@@ -196,6 +197,48 @@ To run GMM use
 ```sh
 GMM = GaussianMixture(n_components=4).fit(X_embedding)
 y_predict = GMM.predict(X_test)
+```
+
+## GANMM on VoxConverse Dataset
+## Feature Extraction 
+A) Training feature extraction in the file **Feature Extraction Training.ipynb**
+
+Reading the transcript for audio segments
+```
+log = open(transcript_file,'r')
+```
+Extracting MFCC features
+```
+audio,sr = librosa.load(audio_folder+file,sr = 16000,offset = start, duration = audio_len)
+mfcc = librosa.feature.mfcc(y = audio, sr = sr, n_mfcc=40)  # Extracting MFCC features
+```
+B) Testing features extraction in the file **Feature Extraction Testing.ipynb**
+
+Appling Voice Activity Detector to get the estimated audio portion
+```
+_,segments,_ = vad(audio_folder+file)
+for segment in progress(segments):
+            if segment['is_speech']==True:
+                start = segment['start']
+                end = segment['finish']
+```
+Further the file saves the MFCC features of 1 sec partitions of the audio segments
+
+
+### LSTM + GANMM model on Voxconverse
+Based on the file **LSTM_GANMM_Voxconverse_model.ipynb**
+
+Trains the LSTM model using Tripple hard loss
+```
+model.compile(
+    optimizer=tf.keras.optimizers.SGD( 
+        learning_rate=0.003,momentum=0.05),
+    loss=tfa.losses.TripletHardLoss())    
+```
+Getting the spectral clustering and GANMM predictions on embeddings
+```
+y_pred_spectral = make_spectral_clusters(embeddings_test)
+y_pred_ganmm = np.load('./GANMM preds/'+file.split('.')[0]+'.npy')
 ```
 
 
