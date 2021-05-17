@@ -1,4 +1,4 @@
-# Speaker Diarization
+# Outliers Team - Speaker Diarization for Imbalanced Class Problem 
 
 Speaker diarization is a task to label audio or video recordings with classes corresponding to speakeridentity, or in short, a task to identify "who spoke when."It involves partitioning an audio stream withmultiple people into homogeneous segments associated with each individual. It is an integral part ofspeech recognition systems and a well-known open problem.
  
