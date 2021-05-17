@@ -3,7 +3,13 @@ import tensorflow as tf
 import numpy as np
 from sklearn.cluster import KMeans
 from spectralcluster import SpectralClusterer
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 import random
+import matplotlib.pyplot as plt
+
+
+
 class GANMM:
     def __init__(self,
                  feature_dim,
@@ -12,7 +18,7 @@ class GANMM:
                  discriminator,
                  classifier,
                  graph=None,
-                 batch_size=32,
+                 batch_size=8,
                  critic_iters=10,
                  name="GANMM"
                  ):
@@ -103,14 +109,17 @@ class GANMM:
               save_path="Result"
               ):
         X = (np.load('/content/gdrive/MyDrive/ML Datasets/test_1.npy'))
-        # curr_labels = KMeans(n_clusters=self.n_cluster).fit(X).labels_
+        #curr_labels = KMeans(n_clusters=self.n_cluster, init = 'k-means++').fit(X).labels_
         clusterer = SpectralClusterer(
-                  min_clusters=4,
-                  max_clusters=4,
-                  p_percentile=0.95,
-                  gaussian_blur_sigma=1)
+                  min_clusters=self.n_cluster,
+                  max_clusters=self.n_cluster,
+                  p_percentile=0.90,
+                  gaussian_blur_sigma=0.5)
         curr_labels = clusterer.predict(X)
-        X_clusterwise = [[],[],[],[]]
+        X_clusterwise = []
+        for i in range(0,self.n_cluster):
+          X_clusterwise.append([])
+
         for k in range(len(X)):
           (X_clusterwise[(curr_labels[k])]).append(X[k])
 
@@ -123,13 +132,19 @@ class GANMM:
                 disc_iters = self.critic_iters
                 for i in range(disc_iters):
                     _data, _targets = next(gen_set[model_idx])
-                    _data = random.sample(X_clusterwise[model_idx], self.batch_size)
+                    
+                    _data = random.choices(X_clusterwise[model_idx],k= self.batch_size)
                     _disc_cost, _ = self.sess.run(
                         [self.disc_cost[model_idx], self.disc_train_op[model_idx]],
                         feed_dict={self.real_data: _data}
                     )
 
- 
+        pca = PCA(n_components=2, random_state = 2019)
+        X_pca = pca.fit_transform(X)
+        plt.xlim(-1,1.5)
+        plt.ylim(-1,1)
+        plt.scatter(X_pca[:,0],X_pca[:,1],c = curr_labels)
+        plt.show()
         print("epsilon-EM ...")
         gen = data_gen
         for iteration in range(n_iter):
@@ -160,7 +175,7 @@ class GANMM:
                     num_chose = 45
                 else:
                     num_chose = 48
-                num_chose = 16
+                num_chose = 6
                 for it in range(disc_iters):
 
                     _chosen_data = []
@@ -231,9 +246,10 @@ class GANMM:
                     else:
                         pred_lbl = np.hstack((pred_lbl, tmp))
                 purity, nmi, ari = self.get_performance(trn_target, pred_lbl)
-                print("iter={}, purity={:.4f}, nmi={:.4f}, ari={:.4f}".format(
-                            iteration, purity, nmi, ari
-                        ))
+                # print("iter={}, purity={:.4f}, nmi={:.4f}, ari={:.4f}".format(
+                #             iteration, purity, nmi, ari
+                #         ))
+                print("iter={}".format(iteration))
                 if log_path is not None:
                     os.makedirs(log_path,exist_ok=True)
                     logger = open(os.path.join(log_path,"log.txt"), 'a')
@@ -248,10 +264,50 @@ class GANMM:
                 iter_path = save_path + 'iter_{}'.format(iteration)
                 os.makedirs(iter_path,exist_ok=True)
                 self.saver.save(self.sess, iter_path + '/model')
+            
+            if iteration%500 == 1:
+                _fake3 = self.sess.run(self.fake)
+                _whole_fake3 = []
+                _labels_fake3 = []
+                for i in range(0,30):
+                  _fake4 = self.sess.run(self.fake)
+                  for j in range(0,self.n_cluster):
+                    _fake3[j] = np.append(_fake3[j],_fake4[j],axis = 0)
+                Y_predict = []
+                i1 = 0
+                while(i1<len(X)):
+                  Y_predict.append(self.predict(X[i1:i1+self.batch_size]))
+                  i1 = i1+self.batch_size
+
+                Y_predict = np.array(Y_predict)
+                Y_predict = Y_predict.flatten()
+                (unique, counts) = np.unique(Y_predict, return_counts=True)
+                frequencies = np.asarray((unique, counts)).T
+                add_num = []
+                for i in range(0,self.n_cluster):
+                  add_num.append(0)
+                avg = int(len(X)/self.n_cluster )
+                for i in range(0,self.n_cluster):
+                  if(avg-frequencies[i][1] > 0):
+                    add_num[i] = min(max(avg-frequencies[i][1],0),150)
+                X_1 = X;
+                
+                for i in range(0,self.n_cluster):
+                  if(add_num[i]>0):
+                    X_1 = np.append(X_1,_fake3[i][:add_num[i]],axis = 0)
+                    Y_curr_1 = [i]*add_num[i]
+                    Y_predict = np.append(Y_predict,np.array(Y_curr_1))
+                
+                curr_labels_1 = clusterer.predict(X_1)
+                X_1_pca = pca.transform(X_1)
+                plt.xlim(-1,1.5)
+                plt.ylim(-1,1)
+                plt.scatter(X_1_pca[:,0],X_1_pca[:,1],c = Y_predict)
+                plt.show()
         _fake1 = self.sess.run(self.fake)
-        for i in range(0,10):
+        for i in range(0,30):
             _fake2 = self.sess.run(self.fake)
-            for j in range(0,4):
+            for j in range(0,self.n_cluster):
               _fake1[j] = np.append(_fake1[j],_fake2[j],axis = 0) 
         np.save('/content/gdrive/MyDrive/ML Datasets/fakeData.npy',_fake1)
 
@@ -259,7 +315,7 @@ class GANMM:
         x = np.reshape(x,[-1,self.feature_dim])
         _proba = self.sess.run(self.proba, feed_dict={self.MNN_input: x})
         return np.argmax(_proba, axis=1)
-
+      
 
     def sampleRestData(self, data, pred_lbl, idx, num):
 

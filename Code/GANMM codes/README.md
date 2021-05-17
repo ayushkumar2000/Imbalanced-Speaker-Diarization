@@ -16,7 +16,7 @@ GANMM code for the paper
 - main.py   is the demo that uses GANMM to cluster some data sets as in the paper
 - Data      contains data sets
 - nets      network structure
-- tflib     tensorflow components (modified from https://github.com/igul222/improved_wgan_training)
+- tflib     tensorflow components (modified from https://github.com/igul222/improved_wgan_training)(Please change the file locations as needed)
 
 ## Run Demo
 - To run experiment on mnist data set, just running:

@@ -45,8 +45,9 @@ if __name__=="__main__":
 
     elif args.data=="sae_mnist":
         from nets.nets_for_sae_mnist import *
-        ganmm = GANMM(256,4,Generator,Discriminator,MNN)
-        batch_size = 32
+        n_cluster = 4
+        ganmm = GANMM(256,n_cluster,Generator,Discriminator,MNN)
+        batch_size = 8
         data_gen = inf_train_gen(tflib.sae_mnist.load(batch_size,batch_size,scale=args.scale))
         split_gen= tflib.sae_mnist.splitGenerator(batch_size,scale=args.scale)
         full_data = tflib.sae_mnist.getTrainData()

@@ -4,6 +4,8 @@ import os
 import pickle
 import scipy.io as sio
 
+n_cluster = 4
+
 def mnist_generator(data, batch_size, n_labelled, limit=None):
     images, targets = data
 
@@ -98,7 +100,7 @@ def splitGenerator(batch_size, scale=1.0):
     data_size = len(labels)
 
     def getEpoch(num):
-        length = int(data_size/(batch_size*4))
+        length = int(data_size/(batch_size*n_cluster))
         i=num*length
         while True:
             yield numpy.copy(images[i * batch_size:(i + 1) * batch_size]), numpy.copy(labels[i * batch_size:(i + 1) * batch_size])
@@ -106,7 +108,7 @@ def splitGenerator(batch_size, scale=1.0):
             if i==(num+1)*length:
                 i=num*length
     ans = []
-    for i in range(0,4):
+    for i in range(0,n_cluster):
       ans.append(getEpoch(i))
     return ans
 
