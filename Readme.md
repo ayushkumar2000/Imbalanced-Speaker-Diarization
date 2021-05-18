@@ -174,7 +174,7 @@ Then for running Spectral clustering on this data refer to **Clustering Algorith
 
 The final cluster is stored in *clusters_sc_g*
 
-OR 
+OR  
 
 Use the predict() method of class *SpectralClusterer* to perform spectral clustering:
 ```sh
