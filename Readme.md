@@ -84,7 +84,7 @@ train_dataset=train_dataset.batch(32)
 
 ## Voice Activity Detection
 ### A) Self trained VAD
-Data Generation for VAD training: Based on *VAD_dataset_generator.ipynb* notebook
+Data Generation for the VAD training: Based on *VAD_dataset_generator.ipynb* notebook
 
 Function mel_constructor generates 1 second audio segments Mel spectrograms of dimention 44*128
 ```sh
